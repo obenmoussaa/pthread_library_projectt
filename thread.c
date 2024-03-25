@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 
-#define STACK_SIZE 10
+#define STACK_SIZE 1000
 /* identifiant de thread
  * NB: pourra être un entier au lieu d'un pointeur si ca vous arrange,
  *     mais attention aux inconvénient des tableaux de threads
@@ -30,10 +30,13 @@ struct thread_queue_entry
 
 SIMPLEQ_HEAD(thread_queue, thread_queue_entry) ready_queue;
 ucontext_t main_context;
+struct thread_queue ready_queue = SIMPLEQ_HEAD_INITIALIZER(ready_queue);
 
 /* recuperer l'identifiant du thread courant.
  */
 thread_t thread_self(void) {
+    printf("%p\n", ready_queue);
+
     return (thread_t) &ready_queue;
 }
 
@@ -59,6 +62,8 @@ int thread_create(thread_t *newthread, void *(*func)(void *), void *funcarg) {
     }
     entry->thread_ptr = (thread_t *)thread;
     SIMPLEQ_INSERT_TAIL(&ready_queue, entry, entries);
+
+    // thread_yield();
 
     *newthread = (thread_t)thread;
     return 0;
@@ -89,6 +94,8 @@ int thread_join(thread_t thread, void **retval) {
         return -1;
     }
 
+    // thread_yield();
+
     if (retval != NULL) {
         *retval = th->retval;
     }
@@ -110,8 +117,11 @@ int thread_join(thread_t thread, void **retval) {
  * n'est pas correctement implémenté (il ne doit jamais retourner).
  */
  __attribute__ ((__noreturn__))  void thread_exit(void *retval){
+        // printf("hhh\n");
     struct thread_node_t *current_thread = (struct thread_node_t *)thread_self();
     current_thread->retval = retval;
+
+    // thread_yield();
 
     struct thread_queue_entry *entry = SIMPLEQ_FIRST(&ready_queue);
     if (entry == NULL) {

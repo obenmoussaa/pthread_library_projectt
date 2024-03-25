@@ -6,7 +6,7 @@ void *thread_function(void *arg) {
     int *val = (int *)arg;
     printf("Thread function received argument: %d\n", *val);
     *val *= 2; // Modify the argument
-    return NULL;
+    thread_exit(NULL);
 }
 
 int main() {
