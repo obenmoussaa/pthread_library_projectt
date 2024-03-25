@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "thread.h"
-
+#include "queue.h"
+#include <ucontext.h> /* ne compile pas avec -std=c89 ou -std=c99 */
 
 
 /* identifiant de thread
@@ -9,6 +10,29 @@
  *     (consommation mémoire, cout d'allocation, ...).
  */
 typedef void * thread_t;
+
+
+struct thread_node_t
+{
+    ucontext_t context;
+    unsigned int * id;
+    void* retval;
+    void* funcarg;
+    void* (* func) (void* );
+};
+
+struct  thread_queue_entry
+{
+    thread_t * thread_ptr;
+    SIMPLEQ_ENTRY(thread_queue_entry);
+};
+
+SIMPLEQ_HEAD(thread_queue, thread_queue_entry);
+
+
+
+
+
 
 /* recuperer l'identifiant du thread courant.
  */
