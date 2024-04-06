@@ -71,4 +71,4 @@ install: thread.o
 
 clean:
 	rm -f *.o example ${MAIN_OBJ} ${SWITCH_OBJ} ${EQUITY_OBJ} ${JOIN_OBJ} ${JOIN-MAIN_OBJ} ${CREATE-MANY} ${CREATE-MANY-RECURSIVE} ${CREATE-MANY-ONCE} ${SWITCH_MANY} ${SWITCH_MANY_JOIN} ${SWITCH_MANY_CASCADE} ${FIBONACCI} ${MUTEX} ${MUTEX_2} ${MUTEX_3} ${PREEMPTION} ${DEADLOCK} 
-	rm -rf install
+	rm -rf install main pthread_main
