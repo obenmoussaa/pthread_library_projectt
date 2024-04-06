@@ -1,10 +1,12 @@
 CC = gcc
 CFLAGS = -Wall -Isrc -std=c99 -g
 
+.PHONY: all build clean
+
 SRC_DIR = src
+TST_DIR = test
 INSTALL_DIR = install
 MAIN_PROGRAM = main.o
-
 
 SRCS = ${SRC_DIR}/*.c
 EXAMPLE_OBJ = example.o
@@ -26,25 +28,26 @@ MUTEX_2 = 62-mutex.o
 MUTEX_3 = 63-mutex-equity.o
 PREEMPTION = 71-preemption.o
 DEADLOCK = 81-deadlock.o
+SIGNAL = signal_test.o
 
+all: build
 
+build: main ${MAIN_OBJ} ${MAIN_OBJ_p} ${SWITCH_OBJ} ${EQUITY_OBJ} ${JOIN_OBJ} ${JOIN-MAIN_OBJ} ${CREATE-MANY} ${CREATE-MANY-RECURSIVE} ${CREATE-MANY-ONCE} ${SWITCH_MANY} ${SWITCH_MANY_JOIN} ${SWITCH_MANY_CASCADE} ${FIBONACCI} ${MUTEX} ${MUTEX_2} ${PREEMPTION} ${DEADLOCK} ${SIGNAL} ${MUTEX_3} install
 
-
-%.o: ${SRC_DIR}/%.c
+%.o: ${SRC_DIR}/%.c 
 	${CC} ${CFLAGS} -fPIC -c $< -o $@
 
-%_p.o: ${SRC_DIR}/%.c
+%_p.o: ${SRC_DIR}/%.c 
 	${CC} ${CFLAGS} -fPIC -DUSE_PTHREAD -c $< -o $@
+	
+%.o: ${TST_DIR}/%.c
+	${CC} ${CFLAGS} -fPIC -c $< -o $@
 
-main: thread.o ${MAIN_PROGRAM}
+main: thread.o ${MAIN_PROGRAM} 
 	${CC} ${CFLAGS} $^ -o $@
 
 pthread_main: thread.o ${MAIN_PROGRAM}
 	${CC} ${CFLAGS}  -DUSE_PTHREAD $^ -o $@
-
-
-
-
 
 install: thread.o 
 
