@@ -29,7 +29,12 @@ struct thread *current_thread = NULL;
 TAILQ_HEAD(tailq, thread) run_queue = TAILQ_HEAD_INITIALIZER(run_queue);
 TAILQ_HEAD(trash, thread) trash_queue = TAILQ_HEAD_INITIALIZER(trash_queue);
 
- void init_thread(void) {
+/**
+ * The __attribute__((constructor)) is used to mark a function as a constructor,
+ * which means it will be automatically called before the main() function when 
+ * the program starts.
+ */
+__attribute__((constructor)) void init_thread(void) {
     main_thread = malloc(sizeof(*main_thread));
 
     getcontext(&main_thread->uc); 
@@ -45,7 +50,7 @@ TAILQ_HEAD(trash, thread) trash_queue = TAILQ_HEAD_INITIALIZER(trash_queue);
     TAILQ_INSERT_HEAD(&run_queue, current_thread, queue_threads);
 }
 
-void free_threads(void) {
+__attribute__((destructor)) void free_threads(void) {
     if(!main_thread->finished ){
       main_thread->finished = 1;
       TAILQ_INSERT_HEAD(&trash_queue, main_thread, queue_threads);
