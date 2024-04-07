@@ -63,20 +63,20 @@ __attribute__((destructor)) void free_threads(void) {
     while (!TAILQ_EMPTY(&trash_queue)) {
       struct thread *save_head = TAILQ_FIRST(&trash_queue);
       TAILQ_REMOVE(&trash_queue, save_head, queue_threads);
-      /*if(save_head != main_thread){
+      if(save_head != main_thread){
         free(save_head->uc.uc_stack.ss_sp);
         VALGRIND_STACK_DEREGISTER(save_head->stack_id);
-      }*/
+      }
       free(save_head);
     }
   }
 
-/*int dead_lock(){
+int dead_lock(){
   if(TAILQ_EMPTY(&run_queue)){
     return 1;
   }
   return 0;
-}*/
+}
 
 void wrap_func(struct thread *thread) {
   void *retval = thread->func(thread->funcarg);
