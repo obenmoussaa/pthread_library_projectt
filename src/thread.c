@@ -10,11 +10,6 @@
 #include <ucontext.h>
 #define STACK_SIZE (10 * 4096)
 
-int makeID() {
-  static int i = 0;
-  return i++;
-}
-
 struct thread {
   thread_t id;
   int blocked;
@@ -100,15 +95,10 @@ int thread_create(thread_t *newthread, void *(*func)(void *), void *funcarg) {
     thread->finished = 0;
     thread->is_signal_pending = 0;
     thread->signal_id = 0;
-    
+
     TAILQ_INSERT_TAIL(&run_queue, thread, queue_threads);
-
-    // Initialize attributes
-
-    //int i = makeID();
-
-    getcontext(&thread->uc); 
-
+    getcontext(&thread->uc);
+    
     thread->uc.uc_stack.ss_size = 64 * 1024;
     thread->uc.uc_stack.ss_sp = malloc(thread->uc.uc_stack.ss_size);
     thread->stack_id = VALGRIND_STACK_REGISTER(thread->uc.uc_stack.ss_sp,
