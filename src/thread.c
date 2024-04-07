@@ -10,11 +10,6 @@
 #include <ucontext.h>
 #define STACK_SIZE (10 * 4096)
 
-int makeID() {
-  static int i = 0;
-  return i++;
-}
-
 struct thread {
   thread_t id;
   int blocked;
@@ -96,17 +91,9 @@ int thread_create(thread_t *newthread, void *(*func)(void *), void *funcarg) {
     thread->ret = NULL;
     *newthread = (thread_t) thread;
     thread->finished = 0;
-    //thread->is_signal_pending = 0;
-    //thread->signal_id = 0;
-    
     TAILQ_INSERT_TAIL(&run_queue, thread, queue_threads);
-
-    // Initialize attributes
-
-    //int i = makeID();
-
-    getcontext(&thread->uc); 
-
+    getcontext(&thread->uc);
+    
     thread->uc.uc_stack.ss_size = 64 * 1024;
     thread->uc.uc_stack.ss_sp = malloc(thread->uc.uc_stack.ss_size);
     thread->stack_id = VALGRIND_STACK_REGISTER(thread->uc.uc_stack.ss_sp,
@@ -132,7 +119,6 @@ int thread_yield(void) {
   
   swapcontext(&save_head->uc, &new_current_thread->uc);
   
-  // free save_head ! pas maintenant !
   return 0;
 }
 
@@ -142,10 +128,6 @@ int thread_join(thread_t thread, void **retval) {
     target_thread->waiting_threads = current_thread;
     struct thread *save_head = TAILQ_FIRST(&run_queue);
     TAILQ_REMOVE(&run_queue, current_thread, queue_threads);
-    // if(dead_lock() && current_thread != main_thread){
-    //   TAILQ_INSERT_TAIL(&run_queue, current_thread, queue_threads);
-    //   return EDEADLK;
-    //   }
   
     struct thread *new_current_thread = TAILQ_FIRST(&run_queue);
     current_thread = new_current_thread;
@@ -180,8 +162,6 @@ void thread_exit(void *retval) {
     if(!TAILQ_EMPTY(&run_queue)){
       struct thread *new_current_thread = TAILQ_FIRST(&run_queue);
       current_thread = new_current_thread;
-
-      //setcontext(&new_current_thread->uc);
       swapcontext(&save_head->uc, &new_current_thread->uc);
     }
     exit(0);
