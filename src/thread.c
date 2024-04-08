@@ -8,7 +8,7 @@
 #include <valgrind/valgrind.h>
 #include <errno.h>
 #include <ucontext.h>
-#define STACK_SIZE (10 * 4096)
+#define STACK_SIZE (64 * 1024)
 
 struct thread {
   thread_t id;
@@ -19,21 +19,20 @@ struct thread {
   void * funcarg;
   ucontext_t uc;
   void * ret;
-  int stack_id;
-  TAILQ_ENTRY(thread) queue_threads;
+  int stack_id; // valgrind peut determiner quelle thread est respinsable d une fuite memoire
+  TAILQ_ENTRY(thread) queue_threads; // 2 references vers prev et next element dans la file
 };
 
 struct thread *main_thread;
 struct thread *current_thread = NULL;
 
 TAILQ_HEAD(tailq, thread) run_queue = TAILQ_HEAD_INITIALIZER(run_queue);
-TAILQ_HEAD(trash, thread) trash_queue = TAILQ_HEAD_INITIALIZER(trash_queue);
+TAILQ_HEAD(trash, thread) dead_queue = TAILQ_HEAD_INITIALIZER(dead_queue); // Pour la liberation des ressources
 
-/**
- * The __attribute__((constructor)) is used to mark a function as a constructor,
- * which means it will be automatically called before the main() function when 
- * the program starts.
- */
+//   __attribute__((constructor)) is used to mark a function as a constructor,
+//  which means it will be automatically called before the main() function when 
+//  the program starts.
+// ici pour initialiser main_thread
 __attribute__((constructor)) void init_thread(void) {
     main_thread = malloc(sizeof(*main_thread));
 
@@ -53,19 +52,22 @@ __attribute__((constructor)) void init_thread(void) {
 __attribute__((destructor)) void free_threads(void) {
     if(!main_thread->finished ){
       main_thread->finished = 1;
-      TAILQ_INSERT_HEAD(&trash_queue, main_thread, queue_threads);
+      TAILQ_INSERT_HEAD(&dead_queue, main_thread, queue_threads);
     }
-    while (!TAILQ_EMPTY(&trash_queue)) {
-      struct thread *save_head = TAILQ_FIRST(&trash_queue);
-      TAILQ_REMOVE(&trash_queue, save_head, queue_threads);
+    //liberer les ressources des threads dans dead_queue
+    while (!TAILQ_EMPTY(&dead_queue)) {
+      struct thread *save_head = TAILQ_FIRST(&dead_queue);
+      TAILQ_REMOVE(&dead_queue, save_head, queue_threads);
       free(save_head);
     }
   }
 
 
+// pour garantir que l execution de func ne va pas arrêter le thread sans faire appel à thread_exit
 void wrap_func(struct thread *thread) {
   void *retval = thread->func(thread->funcarg);
   if (!thread->finished) {
+    // thread_exit recupere la valeur resultat d execution de func puis elle la met sur thread->ret
     thread_exit(retval);
   }
 }
@@ -76,7 +78,6 @@ int thread_create(thread_t *newthread, void *(*func)(void *), void *funcarg) {
     thread->waiting_threads = NULL;
     thread->blocked = 0;
     thread->func = func;
-    thread->waiting_threads = NULL;
     thread->funcarg = funcarg;
     thread->ret = NULL;
     *newthread = (thread_t) thread;
@@ -84,10 +85,10 @@ int thread_create(thread_t *newthread, void *(*func)(void *), void *funcarg) {
     TAILQ_INSERT_TAIL(&run_queue, thread, queue_threads);
     getcontext(&thread->uc);
     
-    thread->uc.uc_stack.ss_size = 64 * 1024;
+    thread->uc.uc_stack.ss_size = STACK_SIZE;
     thread->uc.uc_stack.ss_sp = malloc(thread->uc.uc_stack.ss_size);
-    thread->stack_id = VALGRIND_STACK_REGISTER(thread->uc.uc_stack.ss_sp,
-                                               thread->uc.uc_stack.ss_sp + thread->uc.uc_stack.ss_size);
+    thread->stack_id = VALGRIND_STACK_REGISTER(thread->uc.uc_stack.ss_sp, // debut de la pile
+                                               thread->uc.uc_stack.ss_sp + thread->uc.uc_stack.ss_size); // fin 
     thread->uc.uc_link = NULL;
     makecontext(&thread->uc, (void (*)(void))wrap_func, 1, (intptr_t) thread);
     
@@ -101,6 +102,9 @@ thread_t thread_self(void) {
 int thread_yield(void) {
   struct thread *save_head = TAILQ_FIRST(&run_queue);
   TAILQ_REMOVE(&run_queue, current_thread, queue_threads);
+
+  // si le thread en tete de la file n 'est pas bloqué alors il est prêt à s executer, 
+  // alors current thread doit être préémenté et mis à la fin de la file pour que 1st thread peut s executer
   if( save_head->blocked != 1 ){
       TAILQ_INSERT_TAIL(&run_queue, current_thread, queue_threads);
   }
@@ -118,7 +122,7 @@ int thread_join(thread_t thread, void **retval) {
     target_thread->waiting_threads = current_thread;
     struct thread *save_head = TAILQ_FIRST(&run_queue);
     TAILQ_REMOVE(&run_queue, current_thread, queue_threads);
-  
+    // le thread qui prendra la main est le premier de la file
     struct thread *new_current_thread = TAILQ_FIRST(&run_queue);
     current_thread = new_current_thread;
   
@@ -139,10 +143,10 @@ void thread_exit(void *retval) {
     current_thread->ret = retval;
     TAILQ_REMOVE(&run_queue, current_thread, queue_threads);
     if(current_thread == main_thread){
-      TAILQ_INSERT_HEAD(&trash_queue, current_thread, queue_threads);
+      TAILQ_INSERT_HEAD(&dead_queue, current_thread, queue_threads);
     }
     else{
-      TAILQ_INSERT_TAIL(&trash_queue, current_thread, queue_threads);
+      TAILQ_INSERT_TAIL(&dead_queue, current_thread, queue_threads);
     }
 
     if(save_head->waiting_threads != NULL){ 
