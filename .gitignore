@@ -3,3 +3,4 @@ install
 main
 pthread_main
 .vscode
+*.xml
