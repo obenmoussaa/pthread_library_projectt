@@ -1,6 +1,6 @@
 #include "thread.h"
 #include <stdio.h>
-#include <assert.h>
+ #include <assert.h>
 
 static void * threadfunc(void * arg)
 {

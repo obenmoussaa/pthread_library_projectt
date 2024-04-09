@@ -1,0 +1,5 @@
+install
+*.o
+main
+pthread_main
+.vscode
