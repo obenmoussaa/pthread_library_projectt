@@ -84,7 +84,7 @@ int thread_create(thread_t *newthread, void *(*func)(void *), void *funcarg) {
     thread->blocked = 0;
     thread->func = func;
     thread->funcarg = funcarg;
-    thread->ret = NULL;
+    thread->ret = NULL; 
     *newthread = (thread_t) thread;
     thread->finished = 0;
     TAILQ_INSERT_TAIL(&run_queue, thread, queue_threads);
@@ -105,15 +105,16 @@ thread_t thread_self(void) {
 }
 
 int thread_yield(void) {
-  struct thread *save_head = TAILQ_FIRST(&run_queue);
+  struct thread *save_head = current_thread;
   TAILQ_REMOVE(&run_queue, current_thread, queue_threads);
 
   // si le thread en tete de la file n 'est pas bloqué alors il est prêt à s executer, 
   // alors current thread doit être préémenté et mis à la fin de la file pour que 1st thread peut s executer
-  if( save_head->blocked != 1 ){
+  // if( save_head->blocked != 1 ){
       TAILQ_INSERT_TAIL(&run_queue, current_thread, queue_threads);
-  }
+  // }
   struct thread *new_current_thread = TAILQ_FIRST(&run_queue);
+  // printf("current_thread == save_head ? %d , new_current_thread %p\n", current_thread == save_head, new_current_thread);
   current_thread = new_current_thread;
   
   swapcontext(&save_head->uc, &new_current_thread->uc);
@@ -124,6 +125,7 @@ int thread_yield(void) {
 int thread_join(thread_t thread, void **retval) {
   struct thread *target_thread = (struct thread *) thread;
   if (!target_thread->finished) {
+
     target_thread->waiting_threads = current_thread;
     struct thread *save_head = TAILQ_FIRST(&run_queue);
     TAILQ_REMOVE(&run_queue, current_thread, queue_threads);
