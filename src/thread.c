@@ -57,8 +57,13 @@ __attribute__((destructor)) void free_threads(void) {
     while (!TAILQ_EMPTY(&dead_queue)) {
       struct thread *save_head = TAILQ_FIRST(&dead_queue);
       TAILQ_REMOVE(&dead_queue, save_head, queue_threads);
+      if(save_head != main_thread){
+           free(save_head->uc.uc_stack.ss_sp);
+           VALGRIND_STACK_DEREGISTER(save_head->stack_id);
+      }
       free(save_head);
     }
+    
   }
 
 int dead_lock(){
