@@ -19,8 +19,8 @@ struct thread {
   void * funcarg;
   ucontext_t uc;
   void * ret;
-  int stack_id; // valgrind peut determiner quelle thread est respinsable d une fuite memoire
-  TAILQ_ENTRY(thread) queue_threads; // 2 references vers prev et next element dans la file
+  int stack_id; 
+  TAILQ_ENTRY(thread) queue_threads; 
 };
 
 struct thread *main_thread;
@@ -52,15 +52,17 @@ __attribute__((constructor)) void init_thread(void) {
 __attribute__((destructor)) void free_threads(void) {
     if(!main_thread->finished ){
       main_thread->finished = 1;
-      TAILQ_INSERT_HEAD(&dead_queue, main_thread, queue_threads);
+      // TAILQ_INSERT_HEAD(&dead_queue, main_thread, queue_threads);
+      TAILQ_REMOVE(&run_queue, main_thread, queue_threads);
+      // free(main_thread); 
     }
     while (!TAILQ_EMPTY(&dead_queue)) {
       struct thread *save_head = TAILQ_FIRST(&dead_queue);
       TAILQ_REMOVE(&dead_queue, save_head, queue_threads);
-      if(save_head != main_thread){
+       if(save_head != main_thread){
            free(save_head->uc.uc_stack.ss_sp);
            VALGRIND_STACK_DEREGISTER(save_head->stack_id);
-      }
+       }
       free(save_head);
     }
     
@@ -114,9 +116,7 @@ int thread_yield(void) {
   // si le thread en tete de la file n 'est pas bloqué alors il est prêt à s executer, 
   // alors current thread doit être préémenté et mis à la fin de la file pour que 1st thread peut s executer
 
-  // if( save_head->blocked != 1 ){
-      TAILQ_INSERT_TAIL(&run_queue, current_thread, queue_threads);
-  // } 
+  TAILQ_INSERT_TAIL(&run_queue, current_thread, queue_threads);
   
   struct thread *new_current_thread = TAILQ_FIRST(&run_queue);
   current_thread = new_current_thread;
@@ -167,6 +167,9 @@ void thread_exit(void *retval) {
       struct thread *new_current_thread = TAILQ_FIRST(&run_queue);
       current_thread = new_current_thread;
       swapcontext(&save_head->uc, &new_current_thread->uc);
+    }
+    else{
+      setcontext(&main_thread->uc);
     }
     exit(0);
 }

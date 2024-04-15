@@ -15,14 +15,16 @@ static void * threadfunc(void * arg)
 
 int main(int argc, char *argv[])
 {
-  thread_t thread1, thread2;
-  void *retval1, *retval2;
+  thread_t thread1, thread2, thread3;
+  void *retval1, *retval2, *retval3;
   int err;
 
   printf("le main lance 2 threads...\n");
   err = thread_create(&thread1, threadfunc, "thread1");
   assert(!err);
   err = thread_create(&thread2, threadfunc, "thread2");
+  assert(!err);
+  err = thread_create(&thread3, threadfunc, "thread3");
   assert(!err);
   printf("le main a lancé les threads %p et %p\n",
 	 (void*) thread1, (void*) thread2);
@@ -32,8 +34,10 @@ int main(int argc, char *argv[])
   assert(!err);
   err = thread_join(thread1, &retval1);
   assert(!err);
-  printf("les threads ont terminé en renvoyant '%s' and '%s'\n",
-	 (char *) retval1, (char *) retval2);
+  err = thread_join(thread3, &retval3);
+  assert(!err);
+  printf("les threads ont terminé en renvoyant '%s' and '%s' and '%s'\n",
+	 (char *) retval1, (char *) retval2, (char *) retval3);
 
   return 0;
 }
