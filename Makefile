@@ -44,8 +44,8 @@ build: main ${MAIN_OBJ} ${MAIN_OBJ_p} ${SWITCH_OBJ} ${EQUITY_OBJ} ${JOIN_OBJ} ${
 main: thread.o ${MAIN_PROGRAM} 
 	${CC} ${CFLAGS} $^ -o $@
 
-pthread_main: thread.o ${MAIN_PROGRAM}
-	${CC} ${CFLAGS}  -DUSE_PTHREAD $^ -o $@
+pthread_main: ${SRC_DIR}/main.c ${SRC_DIR}/thread.h 
+	${CC} ${CFLAGS} $^ -o $@ -DUSE_PTHREAD -lpthread 
 
 install: thread.o 
 
