@@ -52,8 +52,8 @@ __attribute__((constructor)) void init_thread(void) {
 __attribute__((destructor)) void free_threads(void) {
     if(!main_thread->finished ){
       main_thread->finished = 1;
-      // TAILQ_INSERT_HEAD(&dead_queue, main_thread, queue_threads);
-      TAILQ_REMOVE(&run_queue, main_thread, queue_threads);
+      TAILQ_INSERT_HEAD(&dead_queue, main_thread, queue_threads);
+      // TAILQ_REMOVE(&run_queue, main_thread, queue_threads);
       // free(main_thread); 
     }
     while (!TAILQ_EMPTY(&dead_queue)) {
