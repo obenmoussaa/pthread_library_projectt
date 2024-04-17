@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Isrc -std=c99 -g
 
-.PHONY: all build clean
+.PHONY: all build clean graphs main pthread_main
 
 SRC_DIR = src
 TST_DIR = tst
@@ -64,7 +64,7 @@ run: install
 
 graphs:
 	python3 graphs/evaluate_performance.py
-	
+
 install: thread.o 
 
 	mkdir ${INSTALL_DIR}
@@ -90,4 +90,4 @@ install: thread.o
 
 clean:
 	rm -f *.o example ${MAIN_OBJ} ${SWITCH_OBJ} ${EQUITY_OBJ} ${JOIN_OBJ} ${JOIN-MAIN_OBJ} ${CREATE-MANY} ${CREATE-MANY-RECURSIVE} ${CREATE-MANY-ONCE} ${SWITCH_MANY} ${SWITCH_MANY_JOIN} ${SWITCH_MANY_CASCADE} ${FIBONACCI} ${MUTEX} ${MUTEX_2} ${MUTEX_3} ${PREEMPTION} ${DEADLOCK} 
-	rm -rf install main pthread_main
+	rm -rf ./graphs/figures/* install main pthread_main 
