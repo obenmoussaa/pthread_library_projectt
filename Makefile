@@ -47,6 +47,24 @@ main: thread.o ${MAIN_PROGRAM}
 pthread_main: ${SRC_DIR}/main.c ${SRC_DIR}/thread.h 
 	${CC} ${CFLAGS} $^ -o $@ -DUSE_PTHREAD -lpthread 
 
+run: install
+	@echo "Running all executables..."
+	@for file in $(wildcard $(INSTALL_DIR)/bin/*); do \
+        echo "Running $$file"; \
+        if [ `echo $$file | grep -E "install/bin/(2|3|5)"` ]; then \
+            if [ $$file = install/bin/31-switch-many ] || [ $$file = install/bin/32-switch-many-join ] || [ $$file = install/bin/33-switch-many-cascade ]; then \
+                ./$$file 20 30; \
+            else \
+                ./$$file 20; \
+            fi; \
+        else \
+            ./$$file; \
+        fi; \
+    done
+
+graphs:
+	python3 graphs/evaluate_performance.py
+	
 install: thread.o 
 
 	mkdir ${INSTALL_DIR}
