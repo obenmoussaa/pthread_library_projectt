@@ -1,6 +1,9 @@
 CC = gcc
 CFLAGS = -Wall -Isrc -std=c99 -g
 
+
+
+
 .PHONY: all build clean
 
 SRC_DIR = src
