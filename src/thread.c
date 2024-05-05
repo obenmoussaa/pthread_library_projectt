@@ -21,11 +21,7 @@ struct thread {
   void * ret;
   int stack_id; 
   TAILQ_ENTRY(thread) queue_threads; 
-  /*--------- les singaux --------*/
-  pthread_mutex_t mutex;
-  pthread_cond_t cond_var;
-  int signal_pending;
-  int signal_value;
+
 
 };
 
