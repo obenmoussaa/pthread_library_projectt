@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Isrc -Iinclude -std=c99 -g
 
-.PHONY: all build clean
+.PHONY: all build clean graphs main pthread_main
 
 SRC_DIR = src
 TST_DIR = tst
@@ -47,6 +47,24 @@ main: thread.o ${MAIN_PROGRAM}
 pthread_main: ${SRC_DIR}/main.c ${SRC_DIR}/thread.h 
 	${CC} ${CFLAGS} $^ -o $@ -DUSE_PTHREAD -lpthread 
 
+run: install
+	@echo "Running all executables..."
+	@for file in $(wildcard $(INSTALL_DIR)/bin/*); do \
+        echo "Running $$file"; \
+        if [ `echo $$file | grep -E "install/bin/(2|3|5)"` ]; then \
+            if [ $$file = install/bin/31-switch-many ] || [ $$file = install/bin/32-switch-many-join ] || [ $$file = install/bin/33-switch-many-cascade ]; then \
+                ./$$file 20 30; \
+            else \
+                ./$$file 20; \
+            fi; \
+        else \
+            ./$$file; \
+        fi; \
+    done
+
+graphs:
+	python3 graphs/evaluate_performance.py
+
 install: thread.o 
 
 	mkdir ${INSTALL_DIR}
@@ -72,4 +90,4 @@ install: thread.o
 
 clean:
 	rm -f *.o example ${MAIN_OBJ} ${SWITCH_OBJ} ${EQUITY_OBJ} ${JOIN_OBJ} ${JOIN-MAIN_OBJ} ${CREATE-MANY} ${CREATE-MANY-RECURSIVE} ${CREATE-MANY-ONCE} ${SWITCH_MANY} ${SWITCH_MANY_JOIN} ${SWITCH_MANY_CASCADE} ${FIBONACCI} ${MUTEX} ${MUTEX_2} ${MUTEX_3} ${PREEMPTION} ${DEADLOCK} 
-	rm -rf install main pthread_main
+	rm -rf ./graphs/figures/* install main pthread_main 

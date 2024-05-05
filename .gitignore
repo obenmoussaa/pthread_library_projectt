@@ -3,3 +3,5 @@ install
 main
 pthread_main
 .vscode
+*.xml
+bruillon.c
