@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Isrc -std=c99 -g
+CFLAGS = -Wall -Isrc -Iinclude -std=c99 -g
 
 .PHONY: all build clean
 
@@ -21,12 +21,12 @@ SWITCH_MANY = 31-switch-many.o
 SWITCH_MANY_JOIN = 32-switch-many-join.o
 SWITCH_MANY_CASCADE = 33-switch-many-cascade.o
 FIBONACCI = 51-fibonacci.o
-# MUTEX = 61-mutex.o
-# MUTEX_2 = 62-mutex.o
-# MUTEX_2 = 62-mutex.o
-# MUTEX_3 = 63-mutex-equity.o
-# PREEMPTION = 71-preemption.o
-# DEADLOCK = 81-deadlock.o
+MUTEX = 61-mutex.o
+MUTEX_2 = 62-mutex.o
+MUTEX_2 = 62-mutex.o
+MUTEX_3 = 63-mutex-equity.o
+PREEMPTION = 71-preemption.o
+DEADLOCK = 81-deadlock.o
 
 
 %.o: ${SRC_DIR}/%.c 
@@ -64,11 +64,11 @@ install: thread.o
 	${CC} ${CFLAGS} ${SWITCH_MANY_JOIN} thread.o -o ${INSTALL_DIR}/bin/32-switch-many-join
 	${CC} ${CFLAGS} ${SWITCH_MANY_CASCADE} thread.o -o ${INSTALL_DIR}/bin/33-switch-many-cascade
 	${CC} ${CFLAGS} ${FIBONACCI} thread.o -o ${INSTALL_DIR}/bin/51-fibonacci
-	# ${CC} ${CFLAGS} ${MUTEX} thread.o -o ${INSTALL_DIR}/bin/61-mutex
-	# ${CC} ${CFLAGS} ${MUTEX_2} thread.o -o ${INSTALL_DIR}/bin/62-mutex
-	# ${CC} ${CFLAGS} ${MUTEX_3} thread.o -o ${INSTALL_DIR}/bin/63-mutex
-	# ${CC} ${CFLAGS} ${PREEMPTION} thread.o -o ${INSTALL_DIR}/bin/71-preemption
-	# ${CC} ${CFLAGS} ${DEADLOCK} thread.o -o ${INSTALL_DIR}/bin/81-deadlock
+	${CC} ${CFLAGS} ${MUTEX} thread.o -o ${INSTALL_DIR}/bin/61-mutex
+	${CC} ${CFLAGS} ${MUTEX_2} thread.o -o ${INSTALL_DIR}/bin/62-mutex
+	${CC} ${CFLAGS} ${MUTEX_3} thread.o -o ${INSTALL_DIR}/bin/63-mutex
+	${CC} ${CFLAGS} ${PREEMPTION} thread.o -o ${INSTALL_DIR}/bin/71-preemption
+	${CC} ${CFLAGS} ${DEADLOCK} thread.o -o ${INSTALL_DIR}/bin/81-deadlock
 
 clean:
 	rm -f *.o example ${MAIN_OBJ} ${SWITCH_OBJ} ${EQUITY_OBJ} ${JOIN_OBJ} ${JOIN-MAIN_OBJ} ${CREATE-MANY} ${CREATE-MANY-RECURSIVE} ${CREATE-MANY-ONCE} ${SWITCH_MANY} ${SWITCH_MANY_JOIN} ${SWITCH_MANY_CASCADE} ${FIBONACCI} ${MUTEX} ${MUTEX_2} ${MUTEX_3} ${PREEMPTION} ${DEADLOCK} 

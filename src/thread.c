@@ -8,6 +8,8 @@
 #include <valgrind/valgrind.h>
 #include <errno.h>
 #include <ucontext.h>
+#include <stdatomic.h>
+
 #define STACK_SIZE (64 * 1024)
 
 struct thread {
@@ -19,8 +21,8 @@ struct thread {
   void * funcarg;
   ucontext_t uc;
   void * ret;
-  int stack_id; // valgrind peut determiner quelle thread est respinsable d une fuite memoire
-  TAILQ_ENTRY(thread) queue_threads; // 2 references vers prev et next element dans la file
+  int stack_id; // valgrind peut determiner quelle thread est responsable d une fuite memoire
+  TAILQ_ENTRY(thread) queue_threads; 
 };
 
 struct thread *main_thread;
@@ -66,12 +68,12 @@ __attribute__((destructor)) void free_threads(void) {
     
   }
 
-int dead_lock(){
+/*int dead_lock(){
   if(TAILQ_EMPTY(&run_queue)){
     return 1;
   }
   return 0;
-}
+}*/
 
 // pour garantir que l execution de func ne va pas arrêter le thread sans faire appel à thread_exit
 void wrap_func(struct thread *thread) {
@@ -120,7 +122,7 @@ int thread_yield(void) {
   }
   struct thread *new_current_thread = TAILQ_FIRST(&run_queue);
   current_thread = new_current_thread;
-  
+  // le ca ou la liste continet qu'un seul élement.
   swapcontext(&save_head->uc, &new_current_thread->uc);
   
   return 0;
@@ -135,7 +137,7 @@ int thread_join(thread_t thread, void **retval) {
     // le thread qui prendra la main est le premier de la file
     struct thread *new_current_thread = TAILQ_FIRST(&run_queue);
     current_thread = new_current_thread;
-  
+   // c'est pas important de donner la main au tread qui attend.
     swapcontext(&save_head->uc, &new_current_thread->uc);
   }
   
@@ -162,11 +164,77 @@ void thread_exit(void *retval) {
     if(save_head->waiting_threads != NULL){ 
       TAILQ_INSERT_HEAD(&run_queue, save_head->waiting_threads, queue_threads);
     }
-
     if(!TAILQ_EMPTY(&run_queue)){
       struct thread *new_current_thread = TAILQ_FIRST(&run_queue);
       current_thread = new_current_thread;
       swapcontext(&save_head->uc, &new_current_thread->uc);
     }
-    exit(0);
+    else{
+      setcontext(&main_thread->uc);
+    }
+    // ???????????
+    exit(0); // ce sert à rien.
+    // s'il y a paersonne dans le liste 
+  
 }
+ 
+/**************Mutex*********************/
+
+
+
+int thread_mutex_init(thread_mutex_t *mutex) {
+  if (mutex != NULL) {
+    mutex->thread_lock = NULL;
+    mutex->is_destroyed = 0;
+    TAILQ_INIT(&mutex->wait_queue);
+    return 0;
+  }
+  return 1;
+}
+
+int thread_mutex_destroy(thread_mutex_t *mutex) {
+  mutex->thread_lock = NULL;
+  mutex->is_destroyed = 1;
+  return 0;
+}
+
+int thread_mutex_lock(thread_mutex_t *mutex) {
+  if (mutex->is_destroyed) {
+    return 1;
+  }
+
+  // Si la section critique est occupée
+  while(mutex->thread_lock != NULL) {
+    if(!TAILQ_EMPTY(&run_queue)){
+      struct thread *head_thread = TAILQ_FIRST(&run_queue);
+      TAILQ_REMOVE(&run_queue, current_thread, queue_threads);
+      current_thread->blocked = 1;
+      TAILQ_INSERT_TAIL(&mutex->wait_queue, current_thread, queue_threads);
+
+      struct thread *new_current_thread = TAILQ_FIRST(&run_queue);
+      current_thread = new_current_thread;
+  
+      swapcontext(&head_thread->uc, &new_current_thread->uc);
+    }
+  }
+  
+  mutex->thread_lock = (thread_t) current_thread;
+
+  return 0;
+}
+
+int thread_mutex_unlock(thread_mutex_t *mutex) {
+  if (mutex->is_destroyed) {
+    return 1;
+  }
+  mutex->thread_lock = NULL;
+
+  if (!TAILQ_EMPTY(&mutex->wait_queue)){
+    struct thread *head_thread = TAILQ_FIRST(&mutex->wait_queue);
+    TAILQ_REMOVE(&mutex->wait_queue, head_thread, queue_threads);
+    head_thread->blocked = 0;
+    TAILQ_INSERT_TAIL(&run_queue, head_thread, queue_threads);
+  }
+  return 0;
+}
+// libération dans le thread_join et dans le destrcuteur.
