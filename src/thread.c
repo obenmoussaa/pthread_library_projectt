@@ -111,6 +111,15 @@ thread_t thread_self(void) {
     return (thread_t) current_thread;
 }
 
+
+int dead_lock(){
+  if(TAILQ_EMPTY(&run_queue)){
+    return 1;
+  }
+  return 0;
+}
+
+
 int thread_yield(void) {
   struct thread *save_head = current_thread;
   TAILQ_REMOVE(&run_queue, current_thread, queue_threads);
