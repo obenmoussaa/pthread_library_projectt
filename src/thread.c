@@ -21,6 +21,12 @@ struct thread {
   void * ret;
   int stack_id; 
   TAILQ_ENTRY(thread) queue_threads; 
+  /*--------- les singaux --------*/
+  pthread_mutex_t mutex;
+  pthread_cond_t cond_var;
+  int signal_pending;
+  int signal_value;
+
 };
 
 struct thread *main_thread;
@@ -126,50 +132,11 @@ int thread_yield(void) {
   return 0;
 }
 
-int thread_join(thread_t thread, void **retval) {
-  struct thread *target_thread = (struct thread *) thread;
-  if (!target_thread->finished) {
-    target_thread->waiting_threads = current_thread;
-    struct thread *save_head = TAILQ_FIRST(&run_queue);
-    TAILQ_REMOVE(&run_queue, current_thread, queue_threads);
-    // le thread qui prendra la main est le premier de la file
-    struct thread *new_current_thread = TAILQ_FIRST(&run_queue);
-    current_thread = new_current_thread;
-  
-    swapcontext(&save_head->uc, &new_current_thread->uc);
-  }
-  
-  if (retval != NULL) {
-    *retval = target_thread->ret;
-  }
-
-  return 0;
-}
 
 
-void thread_exit(void *retval) {
-    struct thread *save_head = TAILQ_FIRST(&run_queue);
-    current_thread->finished = 1;
-    current_thread->ret = retval;
-    TAILQ_REMOVE(&run_queue, current_thread, queue_threads);
-    if(current_thread == main_thread){
-      TAILQ_INSERT_HEAD(&dead_queue, current_thread, queue_threads);
-    }
-    else{
-      TAILQ_INSERT_TAIL(&dead_queue, current_thread, queue_threads);
-    }
 
-    if(save_head->waiting_threads != NULL){ 
-      TAILQ_INSERT_HEAD(&run_queue, save_head->waiting_threads, queue_threads);
-    }
 
-    if(!TAILQ_EMPTY(&run_queue)){
-      struct thread *new_current_thread = TAILQ_FIRST(&run_queue);
-      current_thread = new_current_thread;
-      swapcontext(&save_head->uc, &new_current_thread->uc);
-    }
-    else{
-      setcontext(&main_thread->uc);
-    }
-    exit(0);
-}
+// ################## la partie des signaux ##################
+
+
+
