@@ -201,4 +201,49 @@ int thread_mutex_init(thread_mutex_t *mutex) {
   return 1;
 }
 
+int thread_mutex_destroy(thread_mutex_t *mutex) {
+  mutex->thread_lock = NULL;
+  mutex->is_destroyed = 1;
+  return 0;
+}
 
+int thread_mutex_lock(thread_mutex_t *mutex) {
+  if (mutex->is_destroyed) {
+    return 1;
+  }
+
+  // Si la section critique est occupée
+  while(mutex->thread_lock != NULL) {
+    if(!TAILQ_EMPTY(&run_queue)){
+      struct thread *head_thread = TAILQ_FIRST(&run_queue);
+      TAILQ_REMOVE(&run_queue, current_thread, queue_threads);
+      current_thread->blocked = 1;
+      TAILQ_INSERT_TAIL(&mutex->wait_queue, current_thread, queue_threads);
+
+      struct thread *new_current_thread = TAILQ_FIRST(&run_queue);
+      current_thread = new_current_thread;
+  
+      swapcontext(&head_thread->uc, &new_current_thread->uc);
+    }
+  }
+  
+  mutex->thread_lock = (thread_t) current_thread;
+
+  return 0;
+}
+
+int thread_mutex_unlock(thread_mutex_t *mutex) {
+  if (mutex->is_destroyed) {
+    return 1;
+  }
+  mutex->thread_lock = NULL;
+
+  if (!TAILQ_EMPTY(&mutex->wait_queue)){
+    struct thread *head_thread = TAILQ_FIRST(&mutex->wait_queue);
+    TAILQ_REMOVE(&mutex->wait_queue, head_thread, queue_threads);
+    head_thread->blocked = 0;
+    TAILQ_INSERT_TAIL(&run_queue, head_thread, queue_threads);
+  }
+  return 0;
+}
+// libération dans le thread_join et dans le destrcuteur.
