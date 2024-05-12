@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Isrc -D_GNU_SOURCE -std=c99 -g
+CFLAGS = -Wall -Isrc -D_GNU_SOURCE -Iinclude -std=c99 -g
 
 .PHONY: all build clean graphs main pthread_main
 
