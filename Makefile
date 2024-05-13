@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Isrc -D_GNU_SOURCE -Iinclude -std=c99 -g
 
-.PHONY: all build clean graphs main pthread_main install thread_with_enable_preemption.o
+.PHONY: all build clean graphs main pthread_main thread_with_enable_preemption.o install 
 
 SRC_DIR = src
 TST_DIR = tst
@@ -43,7 +43,7 @@ thread_with_enable_preemption.o: src/thread.c
 
 all: build
 
-build: main ${MAIN_OBJ} ${MAIN_OBJ_p} ${SWITCH_OBJ} ${EQUITY_OBJ} ${JOIN_OBJ} ${JOIN-MAIN_OBJ} ${CREATE-MANY} ${CREATE-MANY-RECURSIVE} ${CREATE-MANY-ONCE} ${SWITCH_MANY} ${SWITCH_MANY_JOIN} ${SWITCH_MANY_CASCADE} ${FIBONACCI} ${MUTEX} ${MUTEX_2} ${PREEMPTION} ${DEADLOCK} ${SIGNAL} ${MUTEX_3} install
+build: main ${MAIN_OBJ} ${MAIN_OBJ_p} ${SWITCH_OBJ} ${EQUITY_OBJ} ${JOIN_OBJ} ${JOIN-MAIN_OBJ} ${CREATE-MANY} ${CREATE-MANY-RECURSIVE} ${CREATE-MANY-ONCE} ${SWITCH_MANY} ${SWITCH_MANY_JOIN} ${SWITCH_MANY_CASCADE} ${FIBONACCI} ${MUTEX} ${MUTEX_2} ${PREEMPTION} ${DEADLOCK} ${SIGNAL} ${MUTEX_3} thread_with_enable_preemption.o install
 
 main: thread.o ${MAIN_PROGRAM} 
 	${CC} ${CFLAGS} $^ -o $@
