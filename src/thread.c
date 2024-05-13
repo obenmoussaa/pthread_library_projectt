@@ -124,6 +124,7 @@ __attribute__((constructor)) void init_thread(void) {
     main_thread->finished = 0;
     main_thread->uc.uc_link = NULL;
     TAILQ_INSERT_HEAD(&run_queue, current_thread, queue_threads);
+    set_alarm_signal();
 }
 
 __attribute__((destructor)) void free_threads(void) {
@@ -178,7 +179,6 @@ int thread_create(thread_t *newthread, void *(*func)(void *), void *funcarg) {
                                                thread->uc.uc_stack.ss_sp + thread->uc.uc_stack.ss_size); // fin 
     thread->uc.uc_link = NULL;
     makecontext(&thread->uc, (void (*)(void))wrap_func, 1, (intptr_t) thread);
-    
     return 0;
 }
 
@@ -187,12 +187,12 @@ thread_t thread_self(void) {
 }
 
 
-int dead_lock(){
-  if(TAILQ_EMPTY(&run_queue)){
-    return 1;
-  }
-  return 0;
-}
+// int dead_lock(){
+//   if(TAILQ_EMPTY(&run_queue)){
+//     return 1;
+//   }
+//   return 0;
+// }
 
 
 int thread_yield(void) {

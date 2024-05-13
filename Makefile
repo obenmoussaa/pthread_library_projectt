@@ -86,7 +86,7 @@ install: thread.o
 	${CC} ${CFLAGS} ${MUTEX} thread.o -o ${INSTALL_DIR}/bin/61-mutex
 	${CC} ${CFLAGS} ${MUTEX_2} thread.o -o ${INSTALL_DIR}/bin/62-mutex
 	${CC} ${CFLAGS} ${MUTEX_3} thread.o -o ${INSTALL_DIR}/bin/63-mutex-equity
-	# ${CC} ${CFLAGS} ${PREEMPTION} thread.o -o ${INSTALL_DIR}/bin/71-preemption
+	${CC} ${CFLAGS} ${PREEMPTION} thread.o -o ${INSTALL_DIR}/bin/71-preemption
 	# ${CC} ${CFLAGS} ${DEADLOCK} thread.o -o ${INSTALL_DIR}/bin/81-deadlock
 
 clean:
