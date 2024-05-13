@@ -47,14 +47,16 @@ TAILQ_HEAD(tailq, thread)
 run_queue = TAILQ_HEAD_INITIALIZER(run_queue);
 TAILQ_HEAD(trash, thread)
 dead_queue = TAILQ_HEAD_INITIALIZER(dead_queue); // Pour la liberation des ressources
-
+#ifdef ENABLEPREEMPTION
 struct itimerval timer;
 struct sigaction sa;
-
+#endif
 int valgrind_stackid;
 
 
 
+
+#ifdef ENABLEPREEMPTION
 
 void schedule_restart()
 {
@@ -87,6 +89,8 @@ void scheduler_init()
   timer.it_value = timer.it_interval;
   setitimer(ITIMER_REAL, &timer, NULL);
 }
+
+#endif
 
 // #endif
 //   __attribute__((constructor)) is used to mark a function as a constructor,
