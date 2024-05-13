@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Isrc -D_GNU_SOURCE -Iinclude -std=c99 -g
 
-.PHONY: all build clean graphs main pthread_main
+.PHONY: all build clean graphs main pthread_main install thread_with_enable_preemption.o
 
 SRC_DIR = src
 TST_DIR = tst
@@ -37,6 +37,10 @@ DEADLOCK = 81-deadlock.o
 	
 %.o: ${TST_DIR}/%.c
 	${CC} ${CFLAGS} -fPIC -c $< -o $@
+
+thread_with_enable_preemption.o: src/thread.c 
+	${CC} ${CFLAGS} -DENABLEPREEMPTION -fPIC -c $< -o $@
+
 all: build
 
 build: main ${MAIN_OBJ} ${MAIN_OBJ_p} ${SWITCH_OBJ} ${EQUITY_OBJ} ${JOIN_OBJ} ${JOIN-MAIN_OBJ} ${CREATE-MANY} ${CREATE-MANY-RECURSIVE} ${CREATE-MANY-ONCE} ${SWITCH_MANY} ${SWITCH_MANY_JOIN} ${SWITCH_MANY_CASCADE} ${FIBONACCI} ${MUTEX} ${MUTEX_2} ${PREEMPTION} ${DEADLOCK} ${SIGNAL} ${MUTEX_3} install
@@ -51,7 +55,7 @@ run: install
 	@echo "Running all executables..."
 	@for file in $(wildcard $(INSTALL_DIR)/bin/*); do \
         echo "Running $$file"; \
-        if [ `echo $$file | grep -E "install/bin/(2|3|5)"` ]; then \
+        if [ `echo $$file | grep -E "install/bin/(2|3|5|7)"` ]; then \
             if [ $$file = install/bin/31-switch-many ] || [ $$file = install/bin/32-switch-many-join ] || [ $$file = install/bin/33-switch-many-cascade ]; then \
                 ./$$file 20 30; \
             else \
@@ -68,8 +72,8 @@ graphs:
 
 install: thread.o 
 
-	mkdir ${INSTALL_DIR}
-	mkdir ${INSTALL_DIR}/bin
+	mkdir -p ${INSTALL_DIR}
+	mkdir -p ${INSTALL_DIR}/bin
 	${CC} -shared $^ -o ${INSTALL_DIR}/libthread.so
 	${CC} ${CFLAGS} ${MAIN_OBJ} thread.o -o ${INSTALL_DIR}/bin/01-main
 	${CC} ${CFLAGS} ${SWITCH_OBJ} thread.o -o ${INSTALL_DIR}/bin/02-switch
@@ -86,7 +90,7 @@ install: thread.o
 	${CC} ${CFLAGS} ${MUTEX} thread.o -o ${INSTALL_DIR}/bin/61-mutex
 	${CC} ${CFLAGS} ${MUTEX_2} thread.o -o ${INSTALL_DIR}/bin/62-mutex
 	${CC} ${CFLAGS} ${MUTEX_3} thread.o -o ${INSTALL_DIR}/bin/63-mutex-equity
-	${CC} ${CFLAGS} ${PREEMPTION} thread.o -o ${INSTALL_DIR}/bin/71-preemption
+	${CC} ${CFLAGS} ${PREEMPTION}  thread_with_enable_preemption.o -o ${INSTALL_DIR}/bin/71-preemption 
 	# ${CC} ${CFLAGS} ${DEADLOCK} thread.o -o ${INSTALL_DIR}/bin/81-deadlock
 
 clean:
