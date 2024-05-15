@@ -70,3 +70,32 @@ run: install
 
 
 
+graphs:
+	python3 graphs/evaluate_performance.py
+
+build: thread.o 
+
+	mkdir -p ${INSTALL_DIR}
+	mkdir -p ${INSTALL_DIR}/bin
+	${CC} -shared $^ -o ${INSTALL_DIR}/libthread.so
+	${CC} ${CFLAGS} ${MAIN_OBJ} thread.o -o ${INSTALL_DIR}/bin/01-main
+	${CC} ${CFLAGS} ${SWITCH_OBJ} thread.o -o ${INSTALL_DIR}/bin/02-switch
+	${CC} ${CFLAGS} ${EQUITY_OBJ} thread.o -o ${INSTALL_DIR}/bin/03-equity
+	${CC} ${CFLAGS} ${JOIN_OBJ} thread.o -o ${INSTALL_DIR}/bin/11-join
+	${CC} ${CFLAGS} ${JOIN-MAIN_OBJ} thread.o -o ${INSTALL_DIR}/bin/12-join-main
+	${CC} ${CFLAGS} ${CREATE-MANY} thread.o -o ${INSTALL_DIR}/bin/21-create-many
+	${CC} ${CFLAGS} ${CREATE-MANY-RECURSIVE} thread.o -o ${INSTALL_DIR}/bin/22-create-many-recursive
+	${CC} ${CFLAGS} ${CREATE-MANY-ONCE} thread.o -o ${INSTALL_DIR}/bin/23-create-many-once
+	${CC} ${CFLAGS} ${SWITCH_MANY} thread.o -o ${INSTALL_DIR}/bin/31-switch-many
+	${CC} ${CFLAGS} ${SWITCH_MANY_JOIN} thread.o -o ${INSTALL_DIR}/bin/32-switch-many-join
+	${CC} ${CFLAGS} ${SWITCH_MANY_CASCADE} thread.o -o ${INSTALL_DIR}/bin/33-switch-many-cascade
+	${CC} ${CFLAGS} ${FIBONACCI} thread.o -o ${INSTALL_DIR}/bin/51-fibonacci
+	${CC} ${CFLAGS} ${MUTEX} thread.o -o ${INSTALL_DIR}/bin/61-mutex
+	${CC} ${CFLAGS} ${MUTEX_2} thread.o -o ${INSTALL_DIR}/bin/62-mutex
+	${CC} ${CFLAGS} ${MUTEX_3} thread.o -o ${INSTALL_DIR}/bin/63-mutex-equity
+	${CC} ${CFLAGS} ${PREEMPTION} thread_with_enable_preemption.o -o ${INSTALL_DIR}/bin/71-preemption 
+	# ${CC} ${CFLAGS} ${DEADLOCK} thread.o -o ${INSTALL_DIR}/bin/81-deadlock
+
+clean:
+	rm -f *.o example ${MAIN_OBJ} ${SWITCH_OBJ} ${EQUITY_OBJ} ${JOIN_OBJ} ${JOIN-MAIN_OBJ} ${CREATE-MANY} ${CREATE-MANY-RECURSIVE} ${CREATE-MANY-ONCE} ${SWITCH_MANY} ${SWITCH_MANY_JOIN} ${SWITCH_MANY_CASCADE} ${FIBONACCI} ${MUTEX} ${MUTEX_2} ${MUTEX_3} ${PREEMPTION} ${DEADLOCK} 
+	rm -rf ./graphs/figures/* install main pthread_main 
