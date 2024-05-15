@@ -70,7 +70,7 @@ void timer_handler(int signum)
 {
   (void)signum;
 
-  // schedule_restart();
+  schedule_restart();
   thread_yield();
 }
 
